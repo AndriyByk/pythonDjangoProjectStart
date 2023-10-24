@@ -1,81 +1,48 @@
-from django.db.models import QuerySet
-from django.http import QueryDict
-from rest_framework.serializers import ValidationError
+from django_filters import rest_framework
 
+from .choices.body_type_choices import BodyTypeChoices
 from .models import CarModel
 
 
-def car_filtered_queryset(query: QueryDict) -> QuerySet:
-    qs = CarModel.objects.all()
+class CarFilter(rest_framework.FilterSet):
+    year_lt = rest_framework.NumberFilter('year', 'lt')
+    year_lte = rest_framework.NumberFilter('year', 'lte')
+    year_gt = rest_framework.NumberFilter('year', 'gt')
+    year_gte = rest_framework.NumberFilter('year', 'gte')
+    year = rest_framework.RangeFilter('year')
 
-    for k, v in query.items():
-        match k:
-            case 'year_gt':
-                qs = qs.filter(year__gt=v)
-            case 'year_lt':
-                qs = qs.filter(year__lt=v)
-            case 'year_gte':
-                qs = qs.filter(year__gte=v)
-            case 'year_lte':
-                qs = qs.filter(year__lte=v)
+    brand_starts = rest_framework.CharFilter('brand', 'startswith')
+    brand_ends = rest_framework.CharFilter('brand', 'endswith')
+    brand_contains = rest_framework.CharFilter('brand', 'contains')
 
-            case 'seats_gt':
-                qs = qs.filter(seats__gt=v)
-            case 'seats_lt':
-                qs = qs.filter(seats__lt=v)
-            case 'seats_gte':
-                qs = qs.filter(seats__gte=v)
-            case 'seats_lte':
-                qs = qs.filter(seats__lte=v)
 
-            case 'volume_gt':
-                qs = qs.filter(volume__gt=v)
-            case 'volume_lt':
-                qs = qs.filter(volume__lt=v)
-            case 'volume_gte':
-                qs = qs.filter(volume__gte=v)
-            case 'volume_lte':
-                qs = qs.filter(volume__lte=v)
+    seats_lt = rest_framework.NumberFilter('seats', 'lt')
+    seats_lte = rest_framework.NumberFilter('seats', 'lte')
+    seats_gt = rest_framework.NumberFilter('seats', 'gt')
+    seats_gte = rest_framework.NumberFilter('seats', 'gte')
 
-            case 'brand_sw':
-                qs = qs.filter(brand__startswith=v)
-            case 'brand_ew':
-                qs = qs.filter(brand__endswith=v)
-            case 'brand_c':
-                qs = qs.filter(brand__contains=v)
+    volume_lt = rest_framework.NumberFilter('volume', 'lt')
+    volume_lte = rest_framework.NumberFilter('volume', 'lte')
+    volume_gt = rest_framework.NumberFilter('volume', 'gt')
+    volume_gte = rest_framework.NumberFilter('volume', 'gte')
 
-            case 'cab_type_sw':
-                qs = qs.filter(cab_type__startswith=v)
-            case 'cab_type_ew':
-                qs = qs.filter(cab_type__endswith=v)
-            case 'cab_type_c':
-                qs = qs.filter(cab_type__contains=v)
-            # sorting
-            case 'o_b_brand_asc':
-                qs = qs.order_by('brand')
-            case 'o_b_brand_desc':
-                qs = qs.order_by('-brand')
+    # cab_type_starts = rest_framework.CharFilter('cab_type', 'startswith')
+    # cab_type_ends = rest_framework.CharFilter('cab_type', 'endswith')
+    # cab_type_contains = rest_framework.CharFilter('cab_type', 'contains')
+    cab_type = rest_framework.ChoiceFilter('cab_type', choices=BodyTypeChoices.choices)
 
-            case 'o_b_year_asc':
-                qs = qs.order_by('year')
-            case 'o_b_year_desc':
-                qs = qs.order_by('-year')
+    order = rest_framework.OrderingFilter(
+        fields=(
+            'id',
+            'brand',
+            'year',
+            'cab_type',
 
-            case 'o_b_seats_asc':
-                qs = qs.order_by('seats')
-            case 'o_b_seats_desc':
-                qs = qs.order_by('-seats')
+            '-id',
+            '-brand',
+            '-year',
+            '-cab_type',
 
-            case 'o_b_cab_type_asc':
-                qs = qs.order_by('cab_type')
-            case 'o_b_cab_type_desc':
-                qs = qs.order_by('-cab_type')
-
-            case 'o_b_volume_asc':
-                qs = qs.order_by('volume')
-            case 'o_b_volume_desc':
-                qs = qs.order_by('-volume')
-            case _:
-                raise ValidationError({'detail': f'{k} not allowed here'})
-
-    return qs
+            # ('price', 'asd')
+        )
+    )
